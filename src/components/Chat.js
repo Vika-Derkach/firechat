@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { db } from "../firebase";
+import React, { useEffect, useRef, useState } from "react";
+import { auth, db } from "../firebase";
 import SendMessages from "./SendMessages";
 import SignOut from "./SignOut";
 
 function Chat() {
+  const scroll = useRef();
   const [messages, setMessages] = useState([]);
   useEffect(() => {
     db.collection("messages")
@@ -13,20 +14,30 @@ function Chat() {
         setMessages(snapshot.docs.map((doc) => doc.data()));
       });
   }, []);
-
+  console.log(messages);
   return (
     <div>
       <SignOut />
+      <div className="msgs">
+        {messages.map(({ id, text, photoURL, uid }) => {
+          return (
+            <div>
+              <div
+                key={id}
+                className={`msg ${
+                  uid === auth.currentUser.uid ? "sent" : "received"
+                }`}
+              >
+                <img src={photoURL} alt="" />
+                <p>{text}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-      {messages.map(({ id, text, photoUrl }) => {
-        return (
-          <div key={id}>
-            <img src={photoUrl} alt="" />
-            <p>{text}</p>
-          </div>
-        );
-      })}
-      <SendMessages />
+      <SendMessages scroll={scroll} />
+      <div ref={scroll}></div>
     </div>
   );
 }
